@@ -1,0 +1,43 @@
+Parsing a pdf
+=============
+
+http://r4ds.had.co.nz/data-import.html#parsing-a-vector
+Useful for stripping out numbers from character text
+
+-------------------------
+parse_number("$100")
+#> [1] 100
+parse_number("20%")
+#> [1] 20
+parse_number("It cost $123.45")
+#> [1] 123
+-------------------------
+
+
+
+https://dzone.com/articles/reading-and-text-mining-pdf
+--------------
+# set path to pdftotxt.exe and convert pdf to text
+exe <- "C:\\Program Files\\xpdfbin-win-3.03\\bin32\\pdftotext.exe"
+system(paste("\"", exe, "\" \"", dest, "\"", sep = ""), wait = F)
+
+
+strip words out of long strings
+-------------------------
+http://stackoverflow.com/questions/24741541/how-to-split-a-string-by-any-number-of-spaces
+use scan
+
+read pdf into a character string / strings in R
+--------------------------------------------
+http://stackoverflow.com/questions/32472729/pdf-to-text-in-r-in-mac
+See the answer, which says you need pdfinfo and pdftotext exe's, and second comment which suggests simply putting those into your working directory. Which i did, and it worked.
+
+
+
+CAS Schedule P data
+------------------
+http://www.casact.org/research/index.cfm?fa=loss_reserves_data
+
+
+
+
