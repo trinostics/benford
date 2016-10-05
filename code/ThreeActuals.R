@@ -6,7 +6,7 @@ benlaw <- function(d) log10(1 + 1 / d)
 digits <- 1:9
 baseBarplot <- barplot(benlaw(digits), names.arg = digits, 
                        xlab = "First Digit", 
-                       main = "Proportion of non-zero numbers in document\n with given First Digit",
+                       main = "Proportion of numbers in document with given First Digit",
                        ylim = c(0, .4))
 #================
 

@@ -1,0 +1,466 @@
+BARUG - Benford's Law
+========================================================
+author: Dan Murphy
+date: 10/4/2016
+autosize: true
+
+Sara Silverstein's post
+========================================================
+![alt text](2016-10-03.png)
+
+Tonight's agenda
+========================================================
+
+Reproduce Sara's post in R
+
+- Graph Benford's Law
+
+  - Ulterior motive: compare base graphics with ggplot2
+  
+- Do random calculations obey the law?
+
+- Does insurance industry data obey the law?
+
+  - Ulterior motive: process pdf files
+
+Define the law and graph it
+========================================================
+
+Using base R
+
+```{r, eval = FALSE}
+BenfordsLaw <- function(d) log10(1 + 1 / d)
+digits <- 1:9
+baseBarplot <- barplot(BenfordsLaw(digits), 
+    names.arg = digits, 
+    xlab = "First Digit", ylim = c(0, .4),
+    main = "Proportion of numbers with given First Digit")
+```
+
+base R plot
+=====================================
+
+```{r, echo = FALSE}
+BenfordsLaw <- function(d) log10(1 + 1 / d)
+digits <- 1:9
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of numbers with given First Digit")
+```
+
+Using ggplot2 
+========================================================
+
+```{r, eval = FALSE}
+library(ggplot2)
+
+df <- data.frame(x = factor(digits), 
+                 y = BenfordsLaw(digits))
+
+ggBarplot <- ggplot(df, aes(x=x, y=y)) + 
+  geom_bar(stat = "identity") +
+  xlab("First Digit")+ylab(NULL)+ylim(0, .4) +
+  ggtitle("Proportion of numbers with given First Digit")
+
+print(ggBarplot)
+```
+
+ggplot2 plot
+=========================================
+
+```{r, echo = FALSE}
+library(ggplot2)
+df <- data.frame(x = digits, y = BenfordsLaw(digits))
+ggBarplot <- ggplot(df, aes(x = factor(x), y = y)) + 
+  geom_bar(stat = "identity") +
+  xlab("First Digit") + ylab(NULL) + ylim(0, .4) +
+  ggtitle("Proportion of numbers with given First Digit")
+print(ggBarplot)
+```
+
+Both plots
+========================================================
+
+base R
+
+```{r, echo = FALSE}
+BenfordsLaw <- function(d) log10(1 + 1 / d)
+digits <- 1:9
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of numbers with given First Digit")
+```
+
+***
+ggplot2
+
+```{r, echo = FALSE}
+library(ggplot2)
+df <- data.frame(x = digits, y = BenfordsLaw(digits))
+ggBarplot <- ggplot(df, aes(x = factor(x), y = y)) + 
+  geom_bar(stat = "identity") +
+  xlab("First Digit") + ylab(NULL) + ylim(0, .4) +
+  ggtitle("Proportion of numbers with given First Digit")
+print(ggBarplot)
+```
+
+Tabulate first-digit frequency of data
+====================================
+
+The first digit w/o leading zeros:
+
+* firstDigit <- function(x) substr(gsub('[0.]', '', x), 1, 1)
+
+Frequency of the first digit:
+
+* pctFirstDigit <- function(x) table(firstDigit(x)) / length(x)
+
+```{r, echo = FALSE}
+firstDigit <- function(x) substr(gsub('[0.]', '', x), 1, 1)
+pctFirstDigit <- function(x) table(firstDigit(x)) / length(x)
+```
+
+For example
+```{r}
+round(pctFirstDigit(seq(10, 90, by=10)), 2)
+```
+
+Random calculations
+====================================
+
+1000 random numbers from 0 to 100
+
+```{r}
+N <- 1000
+set.seed(1234)
+x1 <- runif(N, 0, 100)
+pf1 <- pctFirstDigit(x1)
+round(pf1, 2)
+```
+
+Plot actual versus expected
+====================================
+
+Base R: 'lines' adds to the previous (base) plot
+
+```{r, eval = FALSE}
+lines(x = baseBarplot[,1], y = pf1, col = "red", 
+      lwd=4, type="b", pch=23, cex=1.5, bg="red")
+```
+
+ggplot2: use "layers" to add lines and points to a previous plot
+
+```{r, eval = FALSE}
+p1 <- ggBarplot + 
+  geom_line(data = data.frame(pf1), 
+            aes(x = Var1, y = Freq, group = 1), 
+            colour = "red", size = 2) +
+  geom_point(data = data.frame(pf1), 
+             aes(x = Var1, y = Freq), 
+             colour = "red", 
+             size = 4, pch = 23, bg = "red")
+print(p1)
+```
+
+Plot the actual versus expected
+====================================
+
+base R
+
+```{r, echo = FALSE}
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of non-zero numbers\n with given First Digit")
+lines(x = baseBarplot[,1], y = pf1, col = "red", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "red")
+```
+
+***
+
+ggplot2
+
+```{r, echo = FALSE}
+p1 <- ggBarplot + 
+  geom_line(data = data.frame(pf1), 
+            aes(x = Var1, y =Freq, group = 1), 
+            colour = "red", 
+            size = 2) +
+  geom_point(data = data.frame(pf1), 
+            aes(x = Var1, y = Freq), 
+            colour = "red", 
+            size = 4, pch = 23, bg = "red")
+print(p1)
+```
+
+Square the numbers and plot
+====================================
+
+base R
+
+```{r, eval = FALSE}
+pf2 <- pctFirstDigit(x1^2)
+lines(x = baseBarplot[,1], y=pf2, col="violet",
+  lwd=4, type="b", pch=23, cex=1.5, bg="violet")
+```
+
+ggplot2
+
+```{r, eval = FALSE}
+p2 <- p1 +
+  geom_line(data = data.frame(pf2), 
+            aes(x = Var1, y = Freq, group = 1), 
+            colour = "violet", size = 2) +
+  geom_point(data = data.frame(pf2), 
+             aes(x = Var1, y = Freq), 
+             colour = "violet", 
+             size = 4, pch = 23, bg = "violet")
+print(p2)
+```
+
+Square the numbers and plot
+====================================
+
+base R
+
+```{r, echo = FALSE}
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of non-zero numbers\n with given First Digit")
+lines(x = baseBarplot[,1], y = pf1, col = "red", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "red")
+pf2 <- pctFirstDigit(x1^2)
+lines(x = baseBarplot[,1], y = pf2, col = "violet", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "violet")
+```
+
+***
+
+ggplot2
+
+```{r, echo = FALSE}
+p2 <- p1 +
+  geom_line(data = data.frame(pf2), 
+            aes(x = Var1, y = Freq, group = 1), 
+            colour = "violet", 
+            size = 2) +
+  geom_point(data = data.frame(pf2), 
+             aes(x = Var1, y = Freq), 
+             colour = "violet", 
+             size = 4, pch = 23, bg = "violet")
+print(p2)
+```
+
+Divide by new random numbers
+====================================
+
+```{r, echo = FALSE}
+x3 <- runif(N, 0, 100)
+pf3 <- pctFirstDigit(x1^2 / x3)
+```
+
+Base R
+
+```{r, echo = FALSE}
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of non-zero numbers\n with given First Digit")
+lines(x = baseBarplot[,1], y = pf1, col = "red", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "red")
+lines(x = baseBarplot[,1], y = pf2, col = "violet", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "violet")
+lines(x = baseBarplot[,1], y = pf3, col = "blue", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "blue")
+```
+
+***
+
+ggplot2
+
+```{r, echo = FALSE}
+p3 <- p2 +
+  geom_line(data = data.frame(pf3), 
+            aes(x = Var1, y = Freq, group = 1), 
+            colour = "blue", 
+            size = 2) +
+  geom_point(data = data.frame(pf3), 
+             aes(x = Var1, y = Freq), 
+             colour = "violet", 
+             size = 4, pch = 23, bg = "blue")
+print(p3)
+```
+
+Finally, multiply by new random numbers
+====================================
+
+Base R
+
+```{r, echo = FALSE}
+x4 <- runif(N, 0, 100)
+pf4 <- pctFirstDigit(x1^2 / x3 * x4)
+baseBarplot <- barplot(BenfordsLaw(digits), names.arg = digits, 
+                       xlab = "First Digit", ylim = c(0, .4),
+                       main = "Proportion of non-zero numbers\n with given First Digit")
+lines(x = baseBarplot[,1], y = pf1, col = "red", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "red")
+lines(x = baseBarplot[,1], y = pf2, col = "violet", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "violet")
+lines(x = baseBarplot[,1], y = pf3, col = "blue", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "blue")
+lines(x = baseBarplot[,1], y = pf4, col = "green", lwd = 4, 
+      type = "b", pch = 23, cex = 1.5, bg = "green")
+```
+
+***
+
+ggplot2
+
+```{r, echo = FALSE}
+p4 <- p3 +
+  geom_line(data = data.frame(pf4), 
+            aes(x = Var1, y = Freq, group = 1), 
+            colour = "green", 
+            size = 2) +
+  geom_point(data = data.frame(pf4), 
+             aes(x = Var1, y = Freq), 
+             colour = "violet", 
+             size = 4, pch = 23, bg = "green")
+print(p4)
+```
+
+Manually adding layers is inefficient and inelegant
+
+Better: put all data into one data.frame
+===============================
+
+Two steps:
+
+1) Concatenate results of all 4 operations
+
+```{r}
+DF <- data.frame(cbind(digits,pf1,pf2,pf3,pf4))
+names(DF) <- c("FirstDigit", "X1", "X1^2", "X1^2 / X3", "X1^2 / X3 * X4")
+head(DF)
+```
+
+One data.frame (cont.)
+===============================
+
+2) Melt the data.frame so there is one observation per digit and operation
+
+```{r}
+library(reshape2)
+meltedDF <- melt(DF, id = "FirstDigit", 
+                 variable.name = "operation", 
+                 value.name = "Freq")
+head(meltedDF)
+```
+
+Now plot that data
+============================
+
+* The new variable "operation" distinguishes each digit's data
+  * colour = operation gives data from like operations the same color
+  * group = operation for geom_line will "connect the dots" of like operations
+* ggplot builds a legend automatically
+
+```{r, eval = FALSE}
+P <- ggBarplot + 
+  geom_line(data = meltedDF, 
+    aes(x = FirstDigit, y = Freq,
+        colour = operation, group = operation)) +
+  geom_point(data = meltedDF, 
+    aes(x = FirstDigit, y = Freq, 
+        colour = operation, 
+        bg = operation))
+```
+
+The plot 
+=============================
+
+```{r, echo = FALSE}
+P <- ggBarplot + 
+  geom_line(data = meltedDF, 
+            aes(x = FirstDigit, y = Freq, 
+                colour = operation, group = operation), 
+            ) +
+  geom_point(data = meltedDF, 
+            aes(x = FirstDigit, y = Freq, colour = operation, 
+                bg = operation), 
+            )
+print(P)
+```
+
+***
+
+Wife unimpressed
+
+Insurance industry data
+==========================
+
+* Read pdf file contents
+
+* Identify all individual "words"
+
+* Select only words that represent numbers
+
+* Remove NA's and zeros, turn negatives into positives
+
+* Tabulate and plot First Digit frequencies
+
+Data analyzed
+============================
+* A one-page actuarial exhibit
+* An insurance company rate filing
+* An insurance company annual statement ("yellow book")
+* Schedule P data for all U.S. property casualty insurers 1988 – 1997 
+
+***
+
+![exhibits.png](exhibits.png)
+
+Reading pdf files - code
+=========================
+
+```{r, eval = FALSE}
+library(tm)    # for readPDF
+library(readr) # for parse_number
+txt <- readPDF(control = list(text="-layout")
+               )(elem = list(uri="exhibits.pdf"), 
+                 language="en")$content
+words <- scan(text=txt, what = "")
+nmbrs <- suppressWarnings(sapply(
+  words, parse_number))
+nmbrs <- nmbrs[!is.na(nmbrs)]
+# remove zeros, +- not shown
+pf1 <- pctFirstDigit(nmbrs)
+lines(x = baseBarplot[,1], y = pf1, col = "red", 
+      lwd=4, type="b", pch=23, cex=1.5, bg="red")
+```
+
+Final plot
+====================
+
+![](InsDataPlot.png)
+
+Questions
+=====================
+
+Name the future Laker
+
+Any forensic accountants in the room?
+
+***
+![](KurtRambis.jpg)
+
+Thank you
+====================
+
+Thanks for your attention.
+
+For more information,
+see my Benford posts at www.triKnowBits.com
+
+Dan Murphy  
+dmurphy@trinostics.com  
+SCU '77
+
