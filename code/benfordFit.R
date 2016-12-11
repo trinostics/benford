@@ -1,3 +1,11 @@
+# benfordFit.R
+# Calculate the distribution of leading digits in a 
+#   in a vector x of numbers
+# Also
+#   Defines benford law
+#   Plots the distribution using base barplot
+#   Calculates a chi-square test statistic on the 
+#     goodness of fit of actual distribution to expected
 library(tm) # for readPDF
 library(readr) # for parse_number
 
